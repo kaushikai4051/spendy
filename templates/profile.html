@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+<script src="https://unpkg.com/lucide@latest"></script>
+{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="profile-container">
+
+        <div class="profile-heading">
+            <h1>Your Profile</h1>
+            <p>Manage your account details and security settings.</p>
+        </div>
+
+        <div class="profile-grid">
+
+            <!-- Info card -->
+            <div class="profile-card profile-card--info">
+
+                <div class="profile-avatar">
+                    <span class="profile-avatar__initial">
+                        {% if user.name %}{{ user.name[0]|upper }}{% else %}?{% endif %}
+                    </span>
+                </div>
+
+                <h2 class="profile-name">{{ user.name }}</h2>
+
+                <ul class="profile-detail-list">
+                    <li class="profile-detail-item">
+                        <i data-lucide="mail"></i>
+                        <span>{{ user.email }}</span>
+                    </li>
+                    <li class="profile-detail-item">
+                        <i data-lucide="calendar"></i>
+                        <span>Member since {{ member_since }}</span>
+                    </li>
+                </ul>
+
+                <div class="profile-stats">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span class="profile-stats__text">
+                        {{ expense_count }} expense{{ 's' if expense_count != 1 else '' }}
+                        &middot;
+                        ${{ "%.2f"|format(expense_total) }} total
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- Edit form card -->
+            <div class="profile-card profile-card--form">
+
+                <div class="profile-form-header">
+                    <i data-lucide="user"></i>
+                    <h2>Edit Details</h2>
+                </div>
+
+                {% if error %}
+                <div class="profile-error">{{ error }}</div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('profile') }}" class="profile-form">
+
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input
+                            class="form-input"
+                            type="text"
+                            id="name"
+                            name="name"
+                            value="{{ form_data.name }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input
+                            class="form-input"
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ form_data.email }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="profile-form-divider">
+                        <i data-lucide="lock"></i>
+                        <span>Change Password <em>(optional)</em></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input
+                            class="form-input"
+                            type="password"
+                            id="current_password"
+                            name="current_password"
+                            autocomplete="current-password"
+                            placeholder="Required only if changing password"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input
+                            class="form-input"
+                            type="password"
+                            id="new_password"
+                            name="new_password"
+                            autocomplete="new-password"
+                            placeholder="At least 8 characters"
+                        >
+                    </div>
+
+                    <button type="submit" class="btn-submit profile-submit-btn">
+                        <i data-lucide="save"></i>
+                        Save Changes
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>lucide.createIcons();</script>
+{% endblock %}
