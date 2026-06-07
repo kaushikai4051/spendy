@@ -101,9 +101,74 @@ def logout():
     return redirect(url_for("landing"))
 
 
-@app.route("/profile")
+@app.route("/profile", methods=["GET", "POST"])
 def profile():
-    return "Profile page — coming in Step 4"
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    from datetime import datetime
+
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+    error = None
+
+    if request.method == "POST":
+        name     = request.form.get("name", "").strip()
+        email    = request.form.get("email", "").strip()
+        cur_pw   = request.form.get("current_password", "")
+        new_pw   = request.form.get("new_password", "")
+        form_data = {"name": name, "email": email}
+
+        if not name or not email:
+            error = "Name and email are required."
+        elif new_pw and not cur_pw:
+            error = "Enter your current password to set a new one."
+        elif new_pw and not check_password_hash(user["password_hash"], cur_pw):
+            error = "Current password is incorrect."
+        elif new_pw and len(new_pw) < 8:
+            error = "New password must be at least 8 characters."
+        else:
+            try:
+                if new_pw:
+                    db.execute(
+                        "UPDATE users SET name=?, email=?, password_hash=? WHERE id=?",
+                        (name, email, generate_password_hash(new_pw), session["user_id"])
+                    )
+                else:
+                    db.execute(
+                        "UPDATE users SET name=?, email=? WHERE id=?",
+                        (name, email, session["user_id"])
+                    )
+                db.commit()
+                if name != session.get("user_name"):
+                    session["user_name"] = name
+                db.close()
+                return redirect(url_for("profile"))
+            except sqlite3.IntegrityError:
+                error = "That email address is already in use."
+    else:
+        form_data = {"name": user["name"], "email": user["email"]}
+
+    stats = db.execute(
+        "SELECT COUNT(*) AS cnt, COALESCE(SUM(amount), 0) AS total FROM expenses WHERE user_id=?",
+        (session["user_id"],)
+    ).fetchone()
+    db.close()
+
+    try:
+        member_since = datetime.strptime(user["created_at"][:10], "%Y-%m-%d").strftime("%B %Y")
+    except (ValueError, TypeError):
+        member_since = "Unknown"
+
+    return render_template(
+        "profile.html",
+        user=user,
+        form_data=form_data,
+        expense_count=stats["cnt"],
+        expense_total=stats["total"],
+        member_since=member_since,
+        error=error,
+    )
 
 
 @app.route("/expenses/add")
