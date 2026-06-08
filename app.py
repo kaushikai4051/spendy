@@ -2,6 +2,7 @@ import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import get_db, init_db, seed_db
+from database.queries import get_summary_stats, get_recent_transactions, get_category_breakdown
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret"
@@ -149,24 +150,36 @@ def profile():
     else:
         form_data = {"name": user["name"], "email": user["email"]}
 
-    stats = db.execute(
-        "SELECT COUNT(*) AS cnt, COALESCE(SUM(amount), 0) AS total FROM expenses WHERE user_id=?",
-        (session["user_id"],)
-    ).fetchone()
-    db.close()
-
     try:
         member_since = datetime.strptime(user["created_at"][:10], "%Y-%m-%d").strftime("%B %Y")
     except (ValueError, TypeError):
         member_since = "Unknown"
 
+    db.close()
+
+    # ── Sub-agent-2: Summary Stats ──────────────────────────────────
+    stats         = get_summary_stats(session["user_id"])
+    expense_count = stats["transaction_count"]
+    expense_total = stats["total_spent"]
+    # END SUB-AGENT-2
+
+    # ── Sub-agent-1: Transaction History ───────────────────────────
+    recent_transactions = get_recent_transactions(session["user_id"])
+    # END SUB-AGENT-1
+
+    # ── Sub-agent-3: Category Breakdown ────────────────────────────
+    category_breakdown = get_category_breakdown(session["user_id"])
+    # END SUB-AGENT-3
+
     return render_template(
         "profile.html",
         user=user,
         form_data=form_data,
-        expense_count=stats["cnt"],
-        expense_total=stats["total"],
+        expense_count=expense_count,
+        expense_total=expense_total,
         member_since=member_since,
+        recent_transactions=recent_transactions,
+        category_breakdown=category_breakdown,
         error=error,
     )
 
