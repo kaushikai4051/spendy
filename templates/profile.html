@@ -16,6 +16,33 @@
             <p>Manage your account details and security settings.</p>
         </div>
 
+        <!-- Date Range Filter -->
+        <div class="profile-card profile-filter-bar">
+            <form class="filter-form" method="GET" action="{{ url_for('profile') }}">
+                <div class="filter-fields">
+                    <div class="filter-field">
+                        <label for="filter-from">From</label>
+                        <input class="form-input" type="date" id="filter-from" name="from"
+                               value="{{ date_from or '' }}">
+                    </div>
+                    <div class="filter-field">
+                        <label for="filter-to">To</label>
+                        <input class="form-input" type="date" id="filter-to" name="to"
+                               value="{{ date_to or '' }}">
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn">Filter</button>
+                    {% if date_from or date_to %}
+                    <a href="{{ url_for('profile') }}" class="filter-clear">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+            {% if filter_label %}
+            <p class="filter-active-label">Showing: {{ filter_label }}</p>
+            {% endif %}
+        </div>
+
         <div class="profile-grid">
 
             <!-- Info card -->
