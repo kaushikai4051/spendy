@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from database.db import get_db, init_db, seed_db
@@ -10,6 +11,43 @@ app.secret_key = "spendly-dev-secret"
 with app.app_context():
     init_db()
     seed_db()
+
+
+# ------------------------------------------------------------------ #
+# Helpers                                                             #
+# ------------------------------------------------------------------ #
+
+def _parse_date(val: str | None) -> str | None:
+    """Return val if it is a valid YYYY-MM-DD string, else None."""
+    if not val:
+        return None
+    try:
+        datetime.strptime(val, "%Y-%m-%d")
+        return val
+    except ValueError:
+        return None
+
+
+def _fmt_date(s: str) -> str:
+    """Format a YYYY-MM-DD string as '01 Jan 2025'."""
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").strftime("%d %b %Y")
+    except ValueError:
+        return s
+
+
+def _get_date_filter(args) -> tuple:
+    """Parse and validate date range from request args. Returns (date_from, date_to, filter_label)."""
+    date_from = _parse_date(args.get("from"))
+    date_to = _parse_date(args.get("to"))
+    if date_from and date_to and date_from > date_to:
+        date_from, date_to = date_to, date_from
+    filter_label = None
+    if date_from or date_to:
+        left = _fmt_date(date_from) if date_from else "All time"
+        right = _fmt_date(date_to) if date_to else "present"
+        filter_label = f"{left} – {right}"
+    return date_from, date_to, filter_label
 
 
 # ------------------------------------------------------------------ #
@@ -107,8 +145,6 @@ def profile():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    from datetime import datetime
-
     db = get_db()
     user = db.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],)).fetchone()
     error = None
@@ -157,19 +193,15 @@ def profile():
 
     db.close()
 
-    # ── Sub-agent-2: Summary Stats ──────────────────────────────────
-    stats         = get_summary_stats(session["user_id"])
+    date_from, date_to, filter_label = _get_date_filter(request.args)
+
+    stats = get_summary_stats(session["user_id"], date_from=date_from, date_to=date_to)
     expense_count = stats["transaction_count"]
     expense_total = stats["total_spent"]
-    # END SUB-AGENT-2
 
-    # ── Sub-agent-1: Transaction History ───────────────────────────
-    recent_transactions = get_recent_transactions(session["user_id"])
-    # END SUB-AGENT-1
+    recent_transactions = get_recent_transactions(session["user_id"], date_from=date_from, date_to=date_to)
 
-    # ── Sub-agent-3: Category Breakdown ────────────────────────────
-    category_breakdown = get_category_breakdown(session["user_id"])
-    # END SUB-AGENT-3
+    category_breakdown = get_category_breakdown(session["user_id"], date_from=date_from, date_to=date_to)
 
     return render_template(
         "profile.html",
@@ -181,6 +213,9 @@ def profile():
         recent_transactions=recent_transactions,
         category_breakdown=category_breakdown,
         error=error,
+        date_from=date_from,
+        date_to=date_to,
+        filter_label=filter_label,
     )
 
 

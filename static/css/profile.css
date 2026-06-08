@@ -171,7 +171,7 @@
 .profile-error {
     background: var(--danger-light);
     color: var(--danger);
-    border: 1px solid #f5c6c2;
+    border: 1px solid var(--danger-light);
     border-radius: var(--radius-sm);
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
@@ -237,4 +237,88 @@
     .profile-section {
         padding: 2rem 1rem;
     }
+}
+
+/* ------------------------------------------------------------------ */
+/* Date range filter bar                                               */
+/* ------------------------------------------------------------------ */
+
+.profile-filter-bar { margin-bottom: 1.5rem; }
+
+.filter-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-fields {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 160px;
+}
+
+.filter-field label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.filter-btn {
+    padding: 0.6rem 1.25rem;
+    background: var(--accent);
+    color: var(--paper-card);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.filter-btn:hover { opacity: 0.88; }
+
+.filter-clear {
+    font-size: 0.875rem;
+    color: var(--ink-muted);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.filter-clear:hover { color: var(--danger); }
+
+.filter-active-label {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-light);
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-sm);
+}
+
+@media (max-width: 768px) {
+    .filter-form { flex-direction: column; align-items: stretch; }
+    .filter-fields { flex-direction: column; }
+    .filter-field { min-width: unset; }
+    .filter-btn { width: 100%; }
+    .filter-actions { flex-direction: column; align-items: stretch; }
+    .filter-clear { text-align: center; }
 }
