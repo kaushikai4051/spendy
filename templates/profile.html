@@ -128,6 +128,64 @@
             </div>
 
         </div>
+
+        <!-- Recent Transactions -->
+        <div class="profile-card profile-card--transactions" style="margin-top: 1.5rem;">
+            <div class="profile-form-header">
+                <i data-lucide="list"></i>
+                <h2>Recent Transactions</h2>
+            </div>
+            {% if recent_transactions %}
+            <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border); text-align:left;">
+                        <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500;">Date</th>
+                        <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500;">Description</th>
+                        <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500;">Category</th>
+                        <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500; text-align:right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in recent_transactions %}
+                    <tr style="border-bottom: 1px solid var(--border-soft);">
+                        <td style="padding:0.6rem 0.75rem; color:var(--ink-soft);">{{ txn.date }}</td>
+                        <td style="padding:0.6rem 0.75rem; color:var(--ink);">{{ txn.description or '—' }}</td>
+                        <td style="padding:0.6rem 0.75rem; color:var(--ink-muted);">{{ txn.category }}</td>
+                        <td style="padding:0.6rem 0.75rem; color:var(--ink); text-align:right; font-weight:500;">₹{{ "%.2f"|format(txn.amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--ink-muted); font-size:0.9rem;">No transactions yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="profile-card profile-card--breakdown" style="margin-top: 1.5rem;">
+            <div class="profile-form-header">
+                <i data-lucide="pie-chart"></i>
+                <h2>Spending by Category</h2>
+            </div>
+            {% if category_breakdown %}
+            <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.75rem;">
+                {% for cat in category_breakdown %}
+                <li>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                        <span style="font-size:0.875rem; font-weight:500; color:var(--ink-soft);">{{ cat.name }}</span>
+                        <span style="font-size:0.875rem; color:var(--ink-muted);">₹{{ "%.2f"|format(cat.amount) }} &middot; {{ cat.pct }}%</span>
+                    </div>
+                    <div style="height:6px; background:var(--border-soft); border-radius:999px; overflow:hidden;">
+                        <div style="height:100%; width:{{ cat.pct }}%; background:var(--accent); border-radius:999px;"></div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color:var(--ink-muted); font-size:0.9rem;">No spending data yet.</p>
+            {% endif %}
+        </div>
+
     </div>
 </section>
 {% endblock %}
