@@ -1,12 +1,15 @@
+import os
 import sqlite3
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from database.db import get_db, init_db, seed_db
+from database.db import get_db, init_db, seed_db, add_expense as db_add_expense
 from database.queries import get_summary_stats, get_recent_transactions, get_category_breakdown
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret"
+
+EXPENSE_CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
 
 with app.app_context():
     init_db()
@@ -118,6 +121,7 @@ def login():
     if user is None or not check_password_hash(user["password_hash"], password):
         return render_template("login.html", error="Invalid email or password.")
 
+    session.clear()
     session["user_id"] = user["id"]
     session["user_name"] = user["name"]
     return redirect(url_for("dashboard"))
@@ -219,9 +223,49 @@ def profile():
     )
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template(
+            "add_expense.html",
+            categories=EXPENSE_CATEGORIES,
+            form_data={"date": datetime.today().strftime("%Y-%m-%d"), "category": "Food"},
+        )
+
+    amount_raw = request.form.get("amount", "").strip()
+    category = request.form.get("category", "").strip()
+    date_raw = request.form.get("date", "").strip()
+    desc_raw = request.form.get("description", "").strip()
+
+    error = None
+    amount = None
+    date = None
+
+    try:
+        amount = float(amount_raw)
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        error = "Enter a valid amount greater than ₹0."
+
+    if not error and category not in EXPENSE_CATEGORIES:
+        error = "Select a valid category."
+
+    if not error:
+        date = _parse_date(date_raw)
+        if not date:
+            error = "Enter a valid date."
+
+    if error:
+        return render_template("add_expense.html", categories=EXPENSE_CATEGORIES,
+                               form_data=request.form, error=error)
+
+    description = desc_raw or None
+    db_add_expense(session["user_id"], amount, category, date, description)
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/edit")
@@ -235,4 +279,4 @@ def delete_expense(id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true", port=5001)
