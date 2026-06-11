@@ -47,6 +47,23 @@ def add_expense(user_id: int, amount: float, category: str, date: str, descripti
     conn.close()
 
 
+def get_expense(expense_id: int):
+    conn = get_db()
+    row = conn.execute("SELECT * FROM expenses WHERE id = ?", (expense_id,)).fetchone()
+    conn.close()
+    return row
+
+
+def update_expense(expense_id, user_id, amount, category, date, description) -> None:
+    conn = get_db()
+    conn.execute(
+        "UPDATE expenses SET amount=?, category=?, date=?, description=? WHERE id=? AND user_id=?",
+        (amount, category, date, description, expense_id, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
 def seed_db():
     conn = get_db()
     if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] > 0:
