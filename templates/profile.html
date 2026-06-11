@@ -170,6 +170,7 @@
                         <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500;">Description</th>
                         <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500;">Category</th>
                         <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500; text-align:right;">Amount</th>
+                        <th style="padding:0.5rem 0.75rem; color:var(--ink-muted); font-weight:500;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -179,6 +180,10 @@
                         <td style="padding:0.6rem 0.75rem; color:var(--ink);">{{ txn.description or '—' }}</td>
                         <td style="padding:0.6rem 0.75rem; color:var(--ink-muted);">{{ txn.category }}</td>
                         <td style="padding:0.6rem 0.75rem; color:var(--ink); text-align:right; font-weight:500;">₹{{ "%.2f"|format(txn.amount) }}</td>
+                        <td style="padding:0.6rem 0.75rem; text-align:right;">
+                          <a href="{{ url_for('edit_expense', id=txn.id) }}"
+                             style="font-size:0.8rem; color:var(--accent); text-decoration:none;">Edit</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

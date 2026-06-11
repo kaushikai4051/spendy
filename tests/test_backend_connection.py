@@ -94,7 +94,7 @@ class TestGetRecentTransactions:
 
     def test_dict_keys(self, seeded_db, app):
         result = get_recent_transactions(seeded_db)
-        assert set(result[0].keys()) == {"date", "description", "category", "amount"}
+        assert set(result[0].keys()) == {"id", "date", "description", "category", "amount"}
 
     def test_amount_is_float(self, seeded_db, app):
         result = get_recent_transactions(seeded_db)
