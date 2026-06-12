@@ -30,6 +30,7 @@
                            class="form-input" placeholder="Your password"
                            required>
                 </div>
+                <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
                 <button type="submit" class="btn-submit">Sign in</button>
             </form>
         </div>
