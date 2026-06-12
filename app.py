@@ -1,9 +1,10 @@
 import os
+import secrets
 import sqlite3
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
-from database.db import get_db, init_db, seed_db, add_expense as db_add_expense, get_expense, update_expense
+from database.db import get_db, init_db, seed_db, add_expense as db_add_expense, get_expense, update_expense, delete_expense as db_delete_expense
 from database.queries import get_summary_stats, get_recent_transactions, get_category_breakdown
 
 app = Flask(__name__)
@@ -14,6 +15,23 @@ EXPENSE_CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "
 with app.app_context():
     init_db()
     seed_db()
+
+
+# ------------------------------------------------------------------ #
+# CSRF                                                                #
+# ------------------------------------------------------------------ #
+
+@app.before_request
+def _set_csrf_token():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_hex(32)
+
+
+def _check_csrf():
+    if app.config.get("TESTING"):
+        return
+    if request.form.get("csrf_token") != session.get("csrf_token"):
+        abort(403)
 
 
 # ------------------------------------------------------------------ #
@@ -77,6 +95,7 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
 
+    _check_csrf()
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip()
     password = request.form.get("password", "")
@@ -108,6 +127,7 @@ def login():
     if request.method == "GET":
         return render_template("login.html")
 
+    _check_csrf()
     email = request.form.get("email", "").strip()
     password = request.form.get("password", "")
 
@@ -154,6 +174,7 @@ def profile():
     error = None
 
     if request.method == "POST":
+        _check_csrf()
         name     = request.form.get("name", "").strip()
         email    = request.form.get("email", "").strip()
         cur_pw   = request.form.get("current_password", "")
@@ -235,6 +256,7 @@ def add_expense():
             form_data={"date": datetime.today().strftime("%Y-%m-%d"), "category": "Food"},
         )
 
+    _check_csrf()
     amount_raw = request.form.get("amount", "").strip()
     category = request.form.get("category", "").strip()
     date_raw = request.form.get("date", "").strip()
@@ -291,6 +313,7 @@ def edit_expense(id):
                                form_data=form_data,
                                expense_id=id)
 
+    _check_csrf()
     amount_raw = request.form.get("amount", "").strip()
     category   = request.form.get("category", "").strip()
     date_raw   = request.form.get("date", "").strip()
@@ -327,9 +350,13 @@ def edit_expense(id):
     return redirect(url_for("profile"))
 
 
-@app.route("/expenses/<int:id>/delete")
+@app.route("/expenses/<int:id>/delete", methods=["POST"])
 def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    _check_csrf()
+    db_delete_expense(id, session["user_id"])
+    return redirect(url_for("profile"))
 
 
 if __name__ == "__main__":

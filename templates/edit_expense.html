@@ -41,6 +41,7 @@
           <textarea class="form-input" id="description" name="description"
                     rows="3" maxlength="200">{{ form_data.description or '' }}</textarea>
         </div>
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
         <button type="submit" class="btn-submit">Save Changes</button>
       </form>
       <div class="expense-cancel">
