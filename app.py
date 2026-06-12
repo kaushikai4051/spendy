@@ -144,7 +144,7 @@ def login():
     session.clear()
     session["user_id"] = user["id"]
     session["user_name"] = user["name"]
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/dashboard")
