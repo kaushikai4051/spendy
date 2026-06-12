@@ -42,6 +42,7 @@
                            class="form-input" placeholder="Repeat your password"
                            required>
                 </div>
+                <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
                 <button type="submit" class="btn-submit">Create account</button>
             </form>
         </div>
